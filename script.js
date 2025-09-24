@@ -67,7 +67,8 @@ function fixPersonalitySection() {
 function initParticles() {
     // CDN 로드 실패 시 대비 체크
     if (typeof particlesJS === 'undefined') {
-        console.log('Particles.js CDN 로드 실패 - 파티클 효과 비활성화');
+        console.log('Particles.js CDN 로드 실패 - 커스텀 파티클 효과 생성');
+        createCustomParticles();
         return;
     }
     
@@ -75,20 +76,20 @@ function initParticles() {
         particlesJS('particles-js', {
             particles: {
                 number: {
-                    value: 50,
+                    value: 60,
                     density: {
                         enable: true,
                         value_area: 800
                     }
                 },
                 color: {
-                    value: ['#dc2626', '#991b1b', '#666666']
+                    value: ['#dc2626', '#991b1b', '#b91c1c', '#ef4444']
                 },
                 shape: {
                     type: 'circle'
                 },
                 opacity: {
-                    value: 0.3,
+                    value: 0.4,
                     random: true,
                     anim: {
                         enable: true,
@@ -107,14 +108,14 @@ function initParticles() {
                 },
                 line_linked: {
                     enable: true,
-                    distance: 150,
+                    distance: 120,
                     color: '#dc2626',
-                    opacity: 0.2,
-                    width: 1
+                    opacity: 0.3,
+                    width: 1.5
                 },
                 move: {
                     enable: true,
-                    speed: 1,
+                    speed: 0.8,
                     direction: 'none',
                     random: true,
                     straight: false,
@@ -147,14 +148,118 @@ function initParticles() {
             },
             retina_detect: true
         });
+        console.log('Particles.js 초기화 성공');
     } catch (error) {
         console.log('Particles.js 초기화 실패:', error);
-        // 파티클 컨테이너 숨기기
-        const particlesContainer = document.getElementById('particles-js');
-        if (particlesContainer) {
-            particlesContainer.style.display = 'none';
+        createCustomParticles();
+    }
+}
+
+// 커스텀 파티클 효과 생성 (CDN 실패 시 대체)
+function createCustomParticles() {
+    const container = document.getElementById('particles-js');
+    if (!container) return;
+    
+    console.log('커스텀 파티클 효과 생성 중...');
+    
+    // 기존 내용 제거
+    container.innerHTML = '';
+    
+    // 캔버스 생성
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    container.appendChild(canvas);
+    
+    // 캔버스 크기 설정
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // 파티클 배열
+    const particles = [];
+    const numParticles = 40;
+    
+    // 파티클 클래스
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.radius = Math.random() * 2 + 1;
+            this.opacity = Math.random() * 0.5 + 0.2;
+            this.color = ['#dc2626', '#991b1b', '#b91c1c', '#ef4444'][Math.floor(Math.random() * 4)];
+        }
+        
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            // 경계 확인
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            
+            // 범위 내 유지
+            this.x = Math.max(0, Math.min(canvas.width, this.x));
+            this.y = Math.max(0, Math.min(canvas.height, this.y));
+        }
+        
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.opacity;
+            ctx.fill();
         }
     }
+    
+    // 파티클 생성
+    for (let i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+    }
+    
+    // 파티클 간 연결선 그리기
+    function drawConnections() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 100) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = '#dc2626';
+                    ctx.globalAlpha = (100 - distance) / 100 * 0.3;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+    
+    // 애니메이션 루프
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 연결선 그리기
+        drawConnections();
+        
+        // 파티클 업데이트 및 그리기
+        particles.forEach(particle => {
+            particle.update();
+            particle.draw();
+        });
+        
+        requestAnimationFrame(animate);
+    }
+    
+    animate();
+    console.log('커스텀 파티클 효과 생성 완료');
 }
 
 // 네비게이션 기능 초기화
