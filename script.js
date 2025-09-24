@@ -20,11 +20,58 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 반응형 대응 초기화
     initResponsive();
+    
+    // 모바일 성격 섹션 문제 해결
+    setTimeout(fixPersonalitySection, 100);
 });
+
+// 윈도우 로드 후에도 성격 섹션 체크
+window.addEventListener('load', function() {
+    setTimeout(fixPersonalitySection, 200);
+});
+
+// 성격 섹션 강제 표시 함수
+function fixPersonalitySection() {
+    const personalitySection = document.querySelector('#personality');
+    if (!personalitySection) return;
+    
+    // 모바일에서 성격 섹션이 안 보이는 문제 해결
+    personalitySection.style.cssText = `
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        transform: none !important;
+    `;
+    
+    // 하위 요소들도 강제 표시
+    const allSubElements = personalitySection.querySelectorAll('*');
+    allSubElements.forEach(el => {
+        if (el.style.display === 'none' || 
+            el.style.visibility === 'hidden' || 
+            el.style.opacity === '0') {
+            el.style.cssText += `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            `;
+        }
+    });
+    
+    console.log('성격 섹션 표시 강제 실행 완료');
+}
 
 // 파티클 효과 초기화
 function initParticles() {
-    if (typeof particlesJS !== 'undefined') {
+    // CDN 로드 실패 시 대비 체크
+    if (typeof particlesJS === 'undefined') {
+        console.log('Particles.js CDN 로드 실패 - 파티클 효과 비활성화');
+        return;
+    }
+    
+    try {
         particlesJS('particles-js', {
             particles: {
                 number: {
@@ -100,6 +147,13 @@ function initParticles() {
             },
             retina_detect: true
         });
+    } catch (error) {
+        console.log('Particles.js 초기화 실패:', error);
+        // 파티클 컨테이너 숨기기
+        const particlesContainer = document.getElementById('particles-js');
+        if (particlesContainer) {
+            particlesContainer.style.display = 'none';
+        }
     }
 }
 
@@ -380,6 +434,22 @@ function initScrollAnimations() {
         el.classList.add('fade-in');
         observer.observe(el);
     });
+    
+    // 성격 섹션 강제 표시 (모바일 문제 해결)
+    const personalitySection = document.querySelector('.personality-section');
+    if (personalitySection) {
+        personalitySection.style.display = 'block';
+        personalitySection.style.visibility = 'visible';
+        personalitySection.style.opacity = '1';
+        
+        // 하위 요소들도 강제 표시
+        const subSections = personalitySection.querySelectorAll('.sexual-orientation, .speech-section, .orientation-card, .fetish-item, .scenario');
+        subSections.forEach(section => {
+            section.style.display = 'block';
+            section.style.visibility = 'visible';
+            section.style.opacity = '1';
+        });
+    }
 }
 
 // 스무스 스크롤링 초기화
